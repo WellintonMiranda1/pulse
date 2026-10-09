@@ -26,6 +26,30 @@ export default function App() {
   useEffect(() => saveLocal('pulse_goals', goals), [goals]);
   useEffect(() => saveLocal('pulse_transfer_notifications', transferNotifications), [transferNotifications]);
 
+  const renameProfile = (profileId, name) => {
+    const cleaned = name.trim();
+    if (!cleaned) return false;
+    setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, name: cleaned } : p));
+    setSelectedProfile(prev => prev?.id === profileId ? { ...prev, name: cleaned } : prev);
+    return true;
+  };
+  const setProfileActive = (profileId, active) => {
+    setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, active } : p));
+    if (!active) setSelectedProfile(prev => prev?.id === profileId ? undefined : prev);
+  };
+  const deleteProfile = profileId => {
+    // Never delete a profile with any historical or current relationship.
+    const hasHistory = clients.some(c => c.profile_id === profileId) ||
+      purchases.some(p => p.profile_id === profileId) ||
+      goals.some(g => g.profile_id === profileId) ||
+      projections.some(p => p.profile_id === profileId) ||
+      notes.some(n => n.profile_id === profileId) ||
+      transferNotifications.some(n => n.from_profile_id === profileId || n.to_profile_id === profileId);
+    if (hasHistory) return false;
+    setProfiles(prev => prev.filter(p => p.id !== profileId));
+    setSelectedProfile(prev => prev?.id === profileId ? undefined : prev);
+    return true;
+  };
   const saveAvatar = (profileId, avatar) => setProfiles(prev => prev.map(p => p.id === profileId ? {...p, avatar} : p));
   const markNotificationRead = id => setTransferNotifications(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
   const markAllNotificationsRead = (profileId) => setTransferNotifications(prev => prev.map(n => (!profileId || n.to_profile_id === profileId) ? {...n, read: true} : n));
@@ -135,6 +159,9 @@ export default function App() {
       onBack={() => setSelectedProfile(undefined)}
       profiles={profiles}
       onSaveAvatar={saveAvatar}
+      onRenameProfile={renameProfile}
+      onSetProfileActive={setProfileActive}
+      onDeleteProfile={deleteProfile}
       transferNotifications={transferNotifications}
       onMarkNotificationRead={markNotificationRead}
       onMarkAllNotificationsRead={markAllNotificationsRead}

@@ -7,9 +7,10 @@ import { useMemo, useState, useRef } from 'react';
 import {
   ArrowLeft, BarChart3, Bell, MessageSquare, Target, TrendingUp,
   Trophy, UserPlus, Users, Skull, Moon, Sun, Search, Eye, Pencil, Trash2, Check, CheckCheck, Camera,
-  ArrowRightLeft, ShoppingBag
+  ArrowRightLeft, ShoppingBag, Settings
 } from 'lucide-react';
 import MetricCard from './MetricCard';
+import ProfileSettingsModal from './ProfileSettingsModal';
 import RelacionamentoView from './RelacionamentoView';
 import ClientFormModal from './ClientFormModal';
 import ClientDetailModal from './ClientDetailModal';
@@ -31,7 +32,7 @@ const tabs = [
 const money = n => Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function Dashboard({
-  theme, onToggleTheme, selectedProfile, onBack, profiles, onSaveAvatar, transferNotifications, onMarkNotificationRead, onMarkAllNotificationsRead, clients, purchases, projections, goals, onSaveGoal, onDeleteGoal, onSaveProjection, onDeleteProjection,
+  theme, onToggleTheme, selectedProfile, onBack, profiles, onSaveAvatar, onRenameProfile, onSetProfileActive, onDeleteProfile, transferNotifications, onMarkNotificationRead, onMarkAllNotificationsRead, clients, purchases, projections, goals, onSaveGoal, onDeleteGoal, onSaveProjection, onDeleteProjection,
   onSaveClient, onDeleteClient, onSavePurchase, onEditPurchase, onDeletePurchase, onToggleLost, onTransferPortfolio,
   notes, onAddNote, onEditNote, onDeleteNote, onToggleOverdue
 }) {
@@ -44,6 +45,7 @@ export default function Dashboard({
   const [editingPurchase, setEditingPurchase] = useState(null);
   const [transferOpen, setTransferOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const avatarInputRef = useRef(null);
   const [avatarError, setAvatarError] = useState('');
   const profileNotifications = useMemo(() => (transferNotifications || [])
@@ -251,12 +253,14 @@ export default function Dashboard({
                 <div className="max-h-80 overflow-y-auto">{profileNotifications.length === 0 ? <p className="px-4 py-8 text-center text-sm text-slate-400">Nenhuma transferência recebida.</p> : profileNotifications.map(n => <div key={n.id} className={`border-b border-white/5 px-4 py-3 ${!n.read ? 'bg-blue-500/10' : ''}`}><div className="flex items-start gap-3"><ArrowRightLeft size={17} className="mt-1 shrink-0 text-cyan-300"/><div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{n.client_name}</p><p className="mt-1 text-xs text-slate-300">De {profiles.find(p=>p.id===n.from_profile_id)?.name || 'Perfil anterior'} para {profiles.find(p=>p.id===n.to_profile_id)?.name || 'Perfil atual'}</p><p className="mt-1 text-xs text-slate-500">{new Date(n.transfer_date).toLocaleString('pt-BR')}</p></div>{!n.read && <button type="button" title="Marcar como lida" onClick={() => onMarkNotificationRead(n.id)} className="rounded-lg p-1.5 text-blue-300 hover:bg-white/10"><Check size={16}/></button>}</div></div>)}</div>
               </div>}
             </div>
+            <button type="button" title="Gerenciar perfis" aria-label="Configurações de perfis" onClick={() => setSettingsOpen(true)} className="rounded-xl border border-white/10 bg-white/5 p-2.5 hover:bg-white/10"><Settings className="h-5 w-5"/></button>
             <button type="button" onClick={onToggleTheme} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">{theme === 'dark' ? <Sun className="h-4 w-4"/> : <Moon className="h-4 w-4"/>}{theme === 'dark' ? 'Claro' : 'Escuro'}</button>
           </div>
         </div>
         {avatarError && <div className="mx-auto max-w-7xl px-5 pb-2 text-xs text-rose-300">{avatarError}</div>}
       </header>
 
+      <ProfileSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} profiles={profiles} clients={clients} purchases={purchases} goals={goals} projections={projections} notes={notes} transferNotifications={transferNotifications} onRename={onRenameProfile} onSetActive={onSetProfileActive} onDelete={onDeleteProfile}/>
       <main className="mx-auto max-w-7xl px-5 py-6">
         <div className="mb-6 flex gap-1 overflow-x-auto rounded-xl border border-white/10 bg-white/5 p-1">
           {tabs.map(([id, label, Icon]) => (

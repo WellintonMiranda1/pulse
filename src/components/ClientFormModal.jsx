@@ -62,7 +62,7 @@ export default function ClientFormModal({ open, onClose, client, onSave, default
           </Field>
           <Field label="Responsável">
             <select value={form.profile_id || ''} onChange={e => set('profile_id', e.target.value)} className={inputCls}>
-              {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {profiles.filter(p => p.active !== false).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </Field>
         </div>
