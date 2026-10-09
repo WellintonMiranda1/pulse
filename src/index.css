@@ -158,3 +158,19 @@ button { cursor: pointer; }
 :root[data-theme='light'] .pulse-filter-active.bg-orange-500\/15 { background:#ffedd5!important; color:#9a3412!important; border-color:#fb923c!important; font-weight:700; }
 :root[data-theme='light'] .pulse-filter-active.bg-amber-500\/15 { background:#fef3c7!important; color:#92400e!important; border-color:#fbbf24!important; font-weight:700; }
 :root[data-theme='light'] .pulse-podium img, :root[data-theme='light'] .pulse-ranking-panel img { color:initial; }
+
+/* v1.6.2 — texto e números escuros em TODA a interface do tema claro */
+:root[data-theme='light'] { color:#0b1220; }
+:root[data-theme='light'] :is(h1,h2,h3,h4,h5,h6,p,span,small,strong,b,label,td,th,dt,dd,li,button,a,option,summary) { color:#0b1220!important; }
+:root[data-theme='light'] :is(input,textarea,select) { color:#0b1220!important; }
+:root[data-theme='light'] :is(input,textarea)::placeholder { color:#334155!important; opacity:1; }
+:root[data-theme='light'] [class*='text-'] { color:#0b1220!important; }
+:root[data-theme='light'] .recharts-text,
+:root[data-theme='light'] .recharts-text tspan,
+:root[data-theme='light'] .recharts-cartesian-axis-tick text,
+:root[data-theme='light'] .recharts-legend-item-text,
+:root[data-theme='light'] .recharts-label,
+:root[data-theme='light'] .recharts-label tspan { fill:#0b1220!important; color:#0b1220!important; }
+:root[data-theme='light'] .recharts-tooltip-wrapper :is(div,span,p,li) { color:#0b1220!important; }
+:root[data-theme='light'] button:hover,
+:root[data-theme='light'] button:hover * { color:#0b1220!important; }
