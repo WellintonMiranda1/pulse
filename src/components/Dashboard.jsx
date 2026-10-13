@@ -5,9 +5,9 @@ import GoalsView from './GoalsView';
 import SalesProjectionView from './SalesProjectionView';
 import { useMemo, useState, useRef } from 'react';
 import {
-  ArrowLeft, BarChart3, Bell, MessageSquare, Target, TrendingUp,
+  LogOut, BarChart3, Bell, MessageSquare, Target, TrendingUp,
   Trophy, UserPlus, Users, Skull, Moon, Sun, Search, Eye, Pencil, Trash2, Check, CheckCheck, Camera,
-  ArrowRightLeft, ShoppingBag, Settings
+  ArrowRightLeft, ShoppingBag, Settings, Menu, PanelLeftClose, PanelLeftOpen, Activity
 } from 'lucide-react';
 import MetricCard from './MetricCard';
 import ProfileSettingsModal from './ProfileSettingsModal';
@@ -32,11 +32,13 @@ const tabs = [
 const money = n => Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function Dashboard({
-  theme, onToggleTheme, selectedProfile, onBack, profiles, onSaveAvatar, onRenameProfile, onSetProfileActive, onDeleteProfile, transferNotifications, onMarkNotificationRead, onMarkAllNotificationsRead, clients, purchases, projections, goals, onSaveGoal, onDeleteGoal, onSaveProjection, onDeleteProjection,
+  theme, onToggleTheme, selectedProfile, isAdmin, onBack, profiles, adminAuth, onUpdateAdminAccess, onCreateProfile, onUpdateProfileAccess, onSaveAvatar, onRenameProfile, onSetProfileActive, onDeleteProfile, transferNotifications, onMarkNotificationRead, onMarkAllNotificationsRead, clients, purchases, projections, goals, onSaveGoal, onDeleteGoal, onSaveProjection, onDeleteProjection,
   onSaveClient, onDeleteClient, onSavePurchase, onEditPurchase, onDeletePurchase, onToggleLost, onTransferPortfolio,
   notes, onAddNote, onEditNote, onDeleteNote, onToggleOverdue
 }) {
   const [tab, setTab] = useState('clients');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [search, setSearch] = useState('');
   const [clientFormOpen, setClientFormOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
@@ -221,12 +223,27 @@ export default function Dashboard({
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pulse-shell">
+      {sidebarOpen && <button type="button" aria-label="Fechar menu" className="pulse-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+      <aside className={`pulse-sidebar ${sidebarOpen ? 'is-open' : ''} ${sidebarCollapsed ? 'is-collapsed' : ''}`}>
+        <div className="pulse-sidebar-brand">
+          <div className="pulse-brand-mark"><Activity size={25}/></div>
+          {!sidebarCollapsed && <div><strong>PULSE</strong><small>ORKRUX DIGITAL SOLUTIONS</small></div>}
+          <button type="button" className="pulse-collapse" title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'} onClick={() => setSidebarCollapsed(v => !v)}>{sidebarCollapsed ? <PanelLeftOpen size={18}/> : <PanelLeftClose size={18}/>}</button>
+        </div>
+        <div className="pulse-nav-caption">{!sidebarCollapsed && 'NAVEGAÇÃO'}</div>
+        <nav className="pulse-sidebar-nav" aria-label="Navegação principal">
+          {tabs.map(([id, label, Icon]) => <button type="button" key={id} title={label} onClick={() => {setTab(id);setSearch('');setSidebarOpen(false);}} className={`pulse-nav-link ${tab === id ? 'is-active' : ''}`}><Icon size={19}/>{!sidebarCollapsed && <span>{label}</span>}</button>)}
+        </nav>
+        <div className="pulse-sidebar-footer">{!sidebarCollapsed && <><img className="pulse-orkrux-wordmark" src="/orkrux-wordmark.png" alt="ORKRUX"/><small>DIGITAL SOLUTIONS</small><p>Tecnologia para impulsionar resultados.</p></>}</div>
+      </aside>
+      <div className={`pulse-workspace ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+        <div className="mx-auto flex w-full items-center justify-between gap-3 px-4 py-4 lg:px-7">
+          <button type="button" className="pulse-mobile-menu" title="Abrir menu" onClick={() => setSidebarOpen(true)}><Menu size={22}/></button>
           <div className="flex items-center gap-4">
-            <button onClick={onBack} className="rounded-xl border border-white/10 bg-white/5 p-2.5 hover:bg-white/10">
-              <ArrowLeft className="h-5 w-5" />
+            <button onClick={onBack} title="Sair do Pulse" aria-label="Sair do Pulse" className="rounded-xl border border-white/10 bg-white/5 p-2.5 hover:bg-white/10">
+              <LogOut className="h-5 w-5" />
             </button>
             <div className="relative">
               <button type="button" disabled={!selectedProfile} title={selectedProfile ? 'Alterar foto do perfil' : 'Visão Geral'} onClick={() => avatarInputRef.current?.click()} className="group relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-gradient-to-br from-blue-500 to-indigo-600 font-bold disabled:cursor-default">
@@ -236,8 +253,8 @@ export default function Dashboard({
               <input ref={avatarInputRef} type="file" accept="image/*" onChange={onAvatarFile} className="hidden" aria-label="Selecionar foto de perfil"/>
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{selectedProfile ? selectedProfile.name : 'Visão Geral'}</h1>
-              <p className="text-sm text-slate-400">{selectedProfile ? 'CRM Individual' : 'Todos os Perfis'}</p>
+              <h1 className="text-2xl font-bold">{selectedProfile ? selectedProfile.name : 'Administrador'}</h1>
+              <p className="text-sm text-slate-400">{selectedProfile ? 'CRM Individual' : 'Visão Geral · Todos os usuários'}</p>
             </div>
           </div>
 
@@ -253,29 +270,16 @@ export default function Dashboard({
                 <div className="max-h-80 overflow-y-auto">{profileNotifications.length === 0 ? <p className="px-4 py-8 text-center text-sm text-slate-400">Nenhuma transferência recebida.</p> : profileNotifications.map(n => <div key={n.id} className={`border-b border-white/5 px-4 py-3 ${!n.read ? 'bg-blue-500/10' : ''}`}><div className="flex items-start gap-3"><ArrowRightLeft size={17} className="mt-1 shrink-0 text-cyan-300"/><div className="min-w-0 flex-1"><p className="break-words text-sm font-semibold">{n.client_name}</p><p className="mt-1 text-xs text-slate-300">De {profiles.find(p=>p.id===n.from_profile_id)?.name || 'Perfil anterior'} para {profiles.find(p=>p.id===n.to_profile_id)?.name || 'Perfil atual'}</p><p className="mt-1 text-xs text-slate-500">{new Date(n.transfer_date).toLocaleString('pt-BR')}</p></div>{!n.read && <button type="button" title="Marcar como lida" onClick={() => onMarkNotificationRead(n.id)} className="rounded-lg p-1.5 text-blue-300 hover:bg-white/10"><Check size={16}/></button>}</div></div>)}</div>
               </div>}
             </div>
-            <button type="button" title="Gerenciar perfis" aria-label="Configurações de perfis" onClick={() => setSettingsOpen(true)} className="rounded-xl border border-white/10 bg-white/5 p-2.5 hover:bg-white/10"><Settings className="h-5 w-5"/></button>
+            {isAdmin && <button type="button" title="Gerenciar usuários" aria-label="Configurações de usuários" onClick={() => setSettingsOpen(true)} className="rounded-xl border border-white/10 bg-white/5 p-2.5 hover:bg-white/10"><Settings className="h-5 w-5"/></button>}
             <button type="button" onClick={onToggleTheme} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">{theme === 'dark' ? <Sun className="h-4 w-4"/> : <Moon className="h-4 w-4"/>}{theme === 'dark' ? 'Claro' : 'Escuro'}</button>
           </div>
         </div>
         {avatarError && <div className="mx-auto max-w-7xl px-5 pb-2 text-xs text-rose-300">{avatarError}</div>}
       </header>
 
-      <ProfileSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} profiles={profiles} clients={clients} purchases={purchases} goals={goals} projections={projections} notes={notes} transferNotifications={transferNotifications} onRename={onRenameProfile} onSetActive={onSetProfileActive} onDelete={onDeleteProfile}/>
-      <main className="mx-auto max-w-7xl px-5 py-6">
-        <div className="mb-6 flex gap-1 overflow-x-auto rounded-xl border border-white/10 bg-white/5 p-1">
-          {tabs.map(([id, label, Icon]) => (
-            <button
-              key={id}
-              onClick={() => { setTab(id); setSearch(''); }}
-              className={`flex min-w-max items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium ${
-                tab === id ? 'bg-blue-500/25 text-white ring-1 ring-blue-400/30' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
-        </div>
+      <ProfileSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} profiles={profiles} adminAuth={adminAuth} clients={clients} purchases={purchases} goals={goals} projections={projections} notes={notes} transferNotifications={transferNotifications} onUpdateAdminAccess={onUpdateAdminAccess} onCreateProfile={onCreateProfile} onUpdateProfileAccess={onUpdateProfileAccess} onRename={onRenameProfile} onSetActive={onSetProfileActive} onDelete={onDeleteProfile}/>
+      <main className="mx-auto w-full px-4 py-6 lg:px-7">
+        <div className="pulse-page-heading"><div><span className="pulse-eyebrow">PULSE / {tabs.find(t => t[0] === tab)?.[1]}</span><h2>{tabs.find(t => t[0] === tab)?.[1]}</h2><p>Inteligência comercial e gestão em um só lugar.</p></div><span className="pulse-live-indicator"><span/> AMBIENTE DEMONSTRATIVO</span></div>
 
         {tab === 'clients' && (
           <section>
@@ -328,6 +332,7 @@ export default function Dashboard({
         {tab === 'analytics' && <AnalyticsView clients={clients} purchases={purchases} profiles={profiles} selectedProfile={selectedProfile} />}
 
       </main>
+      </div>
 
       <ClientFormModal
         open={clientFormOpen}

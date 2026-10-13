@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal';
 
+const STATES = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+
 const blank = {
   name: '',
   company: '',
@@ -51,7 +53,10 @@ export default function ClientFormModal({ open, onClose, client, onSave, default
             <input value={form.segment} onChange={e => set('segment', e.target.value)} className={inputCls} />
           </Field>
           <Field label="Estado">
-            <input maxLength={2} placeholder="RS" value={form.estado} onChange={e => set('estado', e.target.value.toUpperCase())} className={inputCls} />
+            <select value={form.estado || ''} onChange={e => set('estado', e.target.value)} className={inputCls}>
+              <option value="">Selecione o estado</option>
+              {STATES.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+            </select>
           </Field>
           <Field label="Origem">
             <select value={form.origin} onChange={e => set('origin', e.target.value)} className={inputCls}>
